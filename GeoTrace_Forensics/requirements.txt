@@ -1,0 +1,7 @@
+PyQt5
+Pillow
+exifread
+folium
+reportlab
+openpyxl
+pandas

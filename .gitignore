@@ -1,0 +1,9 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+GeoTrace_Forensics/venv/
+GeoTrace_Forensics/database/geotrace.db
+GeoTrace_Forensics/output/

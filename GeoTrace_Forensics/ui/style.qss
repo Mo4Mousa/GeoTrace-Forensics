@@ -1,0 +1,72 @@
+QWidget {
+    background: #f6f1e9;
+    color: #1f2933;
+    font-family: "Avenir Next";
+    font-size: 13px;
+}
+
+QMainWindow {
+    background: #f6f1e9;
+}
+
+QGroupBox {
+    border: 1px solid #d8cbb7;
+    border-radius: 10px;
+    margin-top: 12px;
+    padding: 12px;
+    font-weight: 600;
+    background: #fffdf8;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 14px;
+    padding: 0 6px;
+}
+
+QLineEdit, QComboBox, QTextEdit, QTableWidget {
+    background: #fffdf8;
+    border: 1px solid #d7c9b3;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+QPushButton {
+    background: #264653;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-weight: 600;
+}
+
+QPushButton:hover {
+    background: #2a9d8f;
+}
+
+QHeaderView::section {
+    background: #e9dcc8;
+    color: #1f2933;
+    padding: 8px;
+    border: none;
+    font-weight: 600;
+}
+
+QTabWidget::pane {
+    border: 1px solid #d7c9b3;
+    background: #fffdf8;
+    border-radius: 10px;
+}
+
+QTabBar::tab {
+    background: #e9dcc8;
+    padding: 8px 14px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    margin-right: 4px;
+}
+
+QTabBar::tab:selected {
+    background: #2a9d8f;
+    color: white;
+}

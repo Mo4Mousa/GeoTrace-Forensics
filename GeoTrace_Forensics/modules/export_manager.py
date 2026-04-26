@@ -37,6 +37,7 @@ def export_case_excel(case_info, case_results, timeline_data, output_dir):
 
     evidence_rows = []
     anomaly_rows = []
+
     for row in case_results:
         evidence_rows.append(
             {
@@ -57,6 +58,8 @@ def export_case_excel(case_info, case_results, timeline_data, output_dir):
                 "integrity_status": row.get("integrity_status"),
                 "integrity_details": row.get("integrity_details"),
                 "duplicate_count": row.get("duplicate_count", 0),
+                #BONUS: flag if image is suspicious
+                "has_anomalies": len(row.get("anomalies", [])) > 0,
             }
         )
 
@@ -71,6 +74,7 @@ def export_case_excel(case_info, case_results, timeline_data, output_dir):
                 }
             )
 
+    #BONUS: include speed + suspicious movement
     timeline_rows = [
         {
             "sequence": event["sequence"],
@@ -81,11 +85,19 @@ def export_case_excel(case_info, case_results, timeline_data, output_dir):
             "time_delta_minutes": event["time_delta_minutes"],
             "distance_from_previous_km": event["distance_from_previous_km"],
             "anomaly_count": event["anomaly_count"],
+            "speed_kmh": event.get("speed_kmh"),
+            "suspicious_movement": event.get("suspicious_movement", False),
         }
         for event in timeline_data.get("events", [])
     ]
 
-    summary_rows = [{"metric": key, "value": value} for key, value in timeline_data.get("summary", {}).items()]
+    summary_rows = [
+        {"metric": key, "value": value}
+        for key, value in timeline_data.get("summary", {}).items()
+    ]
+
+    #BONUS: correlation sheet (very useful forensic feature)
+    correlation_rows = timeline_data.get("correlations", [])
 
     with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
         pd.DataFrame([case_info]).to_excel(writer, sheet_name="Case", index=False)
@@ -93,5 +105,9 @@ def export_case_excel(case_info, case_results, timeline_data, output_dir):
         pd.DataFrame(evidence_rows).to_excel(writer, sheet_name="Evidence", index=False)
         pd.DataFrame(timeline_rows).to_excel(writer, sheet_name="Timeline", index=False)
         pd.DataFrame(anomaly_rows).to_excel(writer, sheet_name="Anomalies", index=False)
+
+        # ✅ BONUS sheet
+        if correlation_rows:
+            pd.DataFrame(correlation_rows).to_excel(writer, sheet_name="Correlations", index=False)
 
     return output_path

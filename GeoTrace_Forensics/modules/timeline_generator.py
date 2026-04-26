@@ -106,6 +106,24 @@ def generate_timeline(case_results, time_window_minutes=60, distance_window_km=2
                 else None
             )
 
+            #Speed calculation (km/h)
+            speed_kmh = None
+            if (
+                event["time_delta_minutes"] is not None
+                and event["distance_from_previous_km"] is not None
+                and event["time_delta_minutes"] > 0
+            ):
+                hours = event["time_delta_minutes"] / 60
+                speed_kmh = round(event["distance_from_previous_km"] / hours, 2)
+
+            event["speed_kmh"] = speed_kmh
+
+            #Suspicious movement detection
+            event["suspicious_movement"] = False
+            if speed_kmh is not None and speed_kmh > 300:
+                event["suspicious_movement"] = True
+
+            
             if (
                 event["time_delta_minutes"] is not None
                 and event["distance_from_previous_km"] is not None
@@ -118,15 +136,20 @@ def generate_timeline(case_results, time_window_minutes=60, distance_window_km=2
                         "to_image": event["file_name"],
                         "time_delta_minutes": event["time_delta_minutes"],
                         "distance_km": event["distance_from_previous_km"],
+                        
                         "summary": (
-                            f"{previous_event['file_name']} and {event['file_name']} were captured "
-                            f"{event['time_delta_minutes']} minutes and "
-                            f"{event['distance_from_previous_km']} km apart."
+                            f"Movement detected from {previous_event['file_name']} to {event['file_name']}: "
+                            f"{event['distance_from_previous_km']} km in {event['time_delta_minutes']} minutes."
                         ),
                     }
                 )
 
         previous_event = event
+
+    #Total distance calculation
+    total_distance = sum(
+        event["distance_from_previous_km"] or 0 for event in events
+    )
 
     summary = {
         "total_images": len(events),
@@ -147,6 +170,8 @@ def generate_timeline(case_results, time_window_minutes=60, distance_window_km=2
             ),
             None,
         ),
+        #NEW field
+        "total_distance_km": round(total_distance, 2),
     }
 
     return {

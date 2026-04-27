@@ -587,3 +587,5 @@ class MainWindow(QMainWindow):
                 f"Integrity issues detected in {failed_count} image(s)."
             ),
         )
+
+#

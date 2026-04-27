@@ -33,7 +33,7 @@ from modules.map_generator import generate_interactive_map
 from modules.report_generator import generate_forensic_report
 from modules.timeline_generator import generate_timeline
 
-
+#
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -587,5 +587,3 @@ class MainWindow(QMainWindow):
                 f"Integrity issues detected in {failed_count} image(s)."
             ),
         )
-
-#

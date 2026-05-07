@@ -24,7 +24,8 @@ from PyQt5.QtWidgets import (
     QApplication,
 )
 
-from modules.ai_detector import analyze_image_authenticity
+from modules.anomaly_detector import detect_anomalies
+from modules.db_manager import DatabaseManager
 from modules.exif_extractor import extract_exif_data
 from modules.export_manager import export_case_excel, export_case_json
 from modules.gps_decoder import format_coordinates
@@ -32,7 +33,8 @@ from modules.hash_calculator import calculate_sha256, get_file_size
 from modules.map_generator import generate_interactive_map
 from modules.report_generator import generate_forensic_report
 from modules.timeline_generator import generate_timeline
-
+from modules.ai_detector import analyze_image_authenticity
+from modules.blockchain_log import log_evidence, verify_chain, get_chain_summary, get_chain_path
 #
 class MainWindow(QMainWindow):
     def __init__(self):

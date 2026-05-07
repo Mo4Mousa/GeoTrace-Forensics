@@ -216,6 +216,26 @@ class MainWindow(QMainWindow):
         self.details_tabs.addTab(self.raw_exif_text, "Raw EXIF")
         self.details_tabs.addTab(self.timeline_text, "Timeline")
         self.details_tabs.addTab(ai_widget, "🤖 AI Analysis")
+
+        # ── Blockchain tab ──────────────────────
+        chain_widget = QWidget()
+        chain_layout = QVBoxLayout(chain_widget)
+
+        self.chain_status_label = QLabel("Click Verify Chain to check evidence integrity")
+        self.chain_status_label.setAlignment(Qt.AlignCenter)
+        self.chain_status_label.setStyleSheet("font-size: 14px; font-weight: 600; padding: 8px;")
+
+        self.chain_verify_button = QPushButton("🔗 Verify Chain")
+        self.chain_verify_button.clicked.connect(self.verify_blockchain)
+
+        self.chain_text = QTextEdit()
+        self.chain_text.setReadOnly(True)
+
+        chain_layout.addWidget(self.chain_status_label)
+        chain_layout.addWidget(self.chain_verify_button)
+        chain_layout.addWidget(self.chain_text)
+
+        self.details_tabs.addTab(chain_widget, "🔗 Blockchain")
         return self.details_tabs
 
     def _require_case(self):
@@ -669,7 +689,61 @@ class MainWindow(QMainWindow):
 
         # Switch to AI tab automatically
         self.details_tabs.setCurrentIndex(5)
-    
+    def verify_blockchain(self):
+        """Verify the evidence blockchain for the current case."""
+        if not self._require_case():
+            return
+
+        chain_path = get_chain_path(self._artifact_dir())
+        summary    = get_chain_summary(chain_path)
+        is_valid   = summary["chain_valid"]
+
+        # Update status label
+        if is_valid:
+            self.chain_status_label.setText("✅ Chain Intact — Evidence Not Tampered")
+            self.chain_status_label.setStyleSheet(
+                "font-size: 14px; font-weight: 600; padding: 8px; color: green;"
+            )
+        else:
+            self.chain_status_label.setText("🚨 Chain BROKEN — Tampering Detected!")
+            self.chain_status_label.setStyleSheet(
+                "font-size: 14px; font-weight: 600; padding: 8px; color: red;"
+            )
+
+        # Build readable output
+        lines = [
+            "=== BLOCKCHAIN EVIDENCE LOG ===",
+            f"Total Blocks : {summary['total_blocks']}",
+            f"Chain Valid  : {'YES ✅' if is_valid else 'NO 🚨'}",
+            "",
+            "── Block Verification ──",
+        ]
+
+        for result in summary["verification"]:
+            status = result["status"]
+            icon   = "✅" if status == "VERIFIED" else "🚨"
+            lines.append(
+                f"{icon} Block {result.get('index', '?')} | "
+                f"{result.get('file_name', 'Unknown')} | "
+                f"{status} | "
+                f"{result.get('detail', '')}"
+            )
+
+        lines += ["", "── Full Chain ──"]
+        for block in summary["chain"]:
+            lines += [
+                f"",
+                f"Block #{block['index']}",
+                f"  File      : {block['file_name']}",
+                f"  Hash      : {block['file_hash'][:32]}...",
+                f"  Logged at : {block['timestamp']}",
+                f"  By        : {block['investigator']}",
+                f"  Block ID  : {block['block_id'][:32]}...",
+            ]
+
+        self.chain_text.setPlainText("\n".join(lines))
+        self.details_tabs.setCurrentIndex(6)
+        
     def verify_integrity(self):
         if not self._require_case():
             return

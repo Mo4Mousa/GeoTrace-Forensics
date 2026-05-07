@@ -106,7 +106,7 @@ def verify_chain(chain_path):
     chain = _load_chain(chain_path)
 
     if not chain:
-        return False, [{"status": "FAIL", "detail": "No blockchain log found."}]
+        return True, [{"status": "EMPTY", "detail": "No images logged yet — chain is empty."}]
 
     results = []
     is_valid = True

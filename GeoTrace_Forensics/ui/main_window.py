@@ -701,7 +701,13 @@ class MainWindow(QMainWindow):
         is_valid   = summary["chain_valid"]
 
         # Update status label
-        if is_valid:
+        
+        if summary['total_blocks'] == 0:
+            self.chain_status_label.setText("ℹ️ No Evidence Logged Yet — Add Images First")
+            self.chain_status_label.setStyleSheet(
+                "font-size: 14px; font-weight: 600; padding: 8px; color: gray;"
+            )
+        elif is_valid:
             self.chain_status_label.setText("✅ Chain Intact — Evidence Not Tampered")
             self.chain_status_label.setStyleSheet(
                 "font-size: 14px; font-weight: 600; padding: 8px; color: green;"

@@ -1,7 +1,20 @@
-PyQt5
-Pillow
-exifread
-folium
-reportlab
-openpyxl
-pandas
+# GUI Framework
+PyQt5>=5.15.0
+
+# Image Processing
+Pillow>=9.0.0
+
+# EXIF Metadata Extraction
+exifread>=3.0.0
+
+# Geolocation Mapping
+folium>=0.14.0
+
+# PDF Report Generation
+reportlab>=4.0.0
+
+# Excel Export
+openpyxl>=3.1.0
+
+# AI Manipulation Detection (numerical computation for ELA)
+numpy>=1.24.0

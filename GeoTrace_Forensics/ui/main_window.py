@@ -421,6 +421,14 @@ class MainWindow(QMainWindow):
                         ),
                     )
 
+                     # Log to blockchain
+                    log_evidence(
+                    file_name=path.name,
+                    file_hash=sha256_hash,
+                    investigator=self.current_case.get("investigator_name", "Unknown"),
+                    chain_path=get_chain_path(self._artifact_dir()),
+                )
+
                 imported += 1
             except Exception as error:
                 failures.append(f"{file_path}: {error}")
@@ -701,7 +709,7 @@ class MainWindow(QMainWindow):
         is_valid   = summary["chain_valid"]
 
         # Update status label
-        
+
         if summary['total_blocks'] == 0:
             self.chain_status_label.setText("ℹ️ No Evidence Logged Yet — Add Images First")
             self.chain_status_label.setStyleSheet(

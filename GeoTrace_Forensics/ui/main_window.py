@@ -21,10 +21,10 @@ from PyQt5.QtWidgets import (
     QWidget,
     QComboBox,
     QHeaderView,
+    QApplication,
 )
 
-from modules.anomaly_detector import detect_anomalies
-from modules.db_manager import DatabaseManager
+from modules.ai_detector import analyze_image_authenticity
 from modules.exif_extractor import extract_exif_data
 from modules.export_manager import export_case_excel, export_case_json
 from modules.gps_decoder import format_coordinates
@@ -186,11 +186,36 @@ class MainWindow(QMainWindow):
         self.timeline_text = QTextEdit()
         self.timeline_text.setReadOnly(True)
 
+# ── AI Analysis tab ──────────────────────────
+        ai_widget = QWidget()
+        ai_layout = QVBoxLayout(ai_widget)
+
+        self.ai_verdict_label = QLabel("Select an image and click Run AI Analysis")
+        self.ai_verdict_label.setAlignment(Qt.AlignCenter)
+        self.ai_verdict_label.setStyleSheet("font-size: 15px; font-weight: 600; padding: 8px;")
+
+        self.ai_run_button = QPushButton("Run AI Analysis")
+        self.ai_run_button.clicked.connect(self.run_ai_analysis)
+
+        self.ai_details_text = QTextEdit()
+        self.ai_details_text.setReadOnly(True)
+
+        self.ela_preview_label = QLabel("ELA image will appear here")
+        self.ela_preview_label.setAlignment(Qt.AlignCenter)
+        self.ela_preview_label.setMinimumHeight(180)
+        self.ela_preview_label.setStyleSheet("border: 1px dashed #d7c9b3; background: #fffdf8;")
+
+        ai_layout.addWidget(self.ai_verdict_label)
+        ai_layout.addWidget(self.ai_run_button)
+        ai_layout.addWidget(self.ela_preview_label)
+        ai_layout.addWidget(self.ai_details_text)
+
         self.details_tabs.addTab(preview_widget, "Preview")
         self.details_tabs.addTab(self.summary_text, "Metadata")
         self.details_tabs.addTab(self.anomalies_text, "Anomalies")
         self.details_tabs.addTab(self.raw_exif_text, "Raw EXIF")
         self.details_tabs.addTab(self.timeline_text, "Timeline")
+        self.details_tabs.addTab(ai_widget, "🤖 AI Analysis")
         return self.details_tabs
 
     def _require_case(self):
@@ -569,6 +594,82 @@ class MainWindow(QMainWindow):
         )
         self._open_file(output_path)
 
+    def run_ai_analysis(self):
+        """Run AI manipulation detection on the selected image."""
+        row_index = self.results_table.currentRow()
+        if row_index < 0 or row_index >= len(self.current_results):
+            QMessageBox.warning(self, "No Image Selected", "Select an image from the table first.")
+            return
+
+        row = self.current_results[row_index]
+        file_path = row.get("file_path", "")
+
+        if not file_path or not Path(file_path).exists():
+            QMessageBox.warning(self, "File Not Found", "The image file could not be located.")
+            return
+
+        # Run the analysis
+        self.ai_verdict_label.setText("⏳ Analysing...")
+        QApplication.processEvents()  # refresh UI so user sees the message
+
+        result = analyze_image_authenticity(file_path, exif_data=row)
+
+        # Show verdict
+        verdict = result.get("verdict", "Unknown")
+        color   = result.get("verdict_color", "gray")
+        self.ai_verdict_label.setText(verdict)
+        self.ai_verdict_label.setStyleSheet(
+            f"font-size: 15px; font-weight: 600; padding: 8px; color: {color};"
+        )
+
+        # Show ELA image
+        ela_img = result.get("ela_image")
+        if ela_img:
+            # Save ELA image to temp, load into label
+            temp_ela = Path(file_path).parent / "_ela_preview.png"
+            ela_img.save(str(temp_ela))
+            pixmap = QPixmap(str(temp_ela))
+            if not pixmap.isNull():
+                self.ela_preview_label.setPixmap(
+                    pixmap.scaled(420, 180, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                )
+                self.ela_preview_label.setText("")
+            try:
+                temp_ela.unlink()
+            except Exception:
+                pass
+
+        # Build details text
+        lines = [
+            f"=== AI ANALYSIS RESULT ===",
+            f"File         : {row.get('file_name')}",
+            f"Verdict      : {verdict}",
+            f"Confidence   : {result.get('confidence_pct')}%",
+            f"",
+            f"── Error Level Analysis (ELA) ──",
+            f"ELA Score    : {result.get('ela_score')}  (0=clean, 1=suspicious)",
+            f"Mean Error   : {result.get('ela_mean_error')}",
+            f"Max Error    : {result.get('ela_max_error')}",
+            f"",
+            f"── Noise Analysis ──",
+            f"Noise Score  : {result.get('noise_score')}",
+            f"Noise Var.   : {result.get('noise_variance')}",
+            f"Verdict      : {result.get('noise_verdict')}",
+            f"",
+            f"── Metadata Consistency ──",
+        ]
+
+        for finding in result.get("metadata_findings", []):
+            lines.append(f"[{finding['result']}] {finding['check']}: {finding['detail']}")
+
+        if result.get("error"):
+            lines.append(f"\n❌ Error: {result['error']}")
+
+        self.ai_details_text.setPlainText("\n".join(lines))
+
+        # Switch to AI tab automatically
+        self.details_tabs.setCurrentIndex(5)
+    
     def verify_integrity(self):
         if not self._require_case():
             return

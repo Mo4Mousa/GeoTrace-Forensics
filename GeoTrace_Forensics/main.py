@@ -1,8 +1,10 @@
+import os
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+os.environ.pop("QT_DEVICE_PIXEL_RATIO", None)
+
 import sys
 from pathlib import Path
-
 from PyQt5.QtWidgets import QApplication
-
 from ui.main_window import MainWindow
 
 

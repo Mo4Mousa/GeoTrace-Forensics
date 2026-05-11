@@ -71,13 +71,14 @@ def generate_forensic_report(case_info, case_results, timeline_data, output_dir)
     story.append(summary_table)
     story.append(Spacer(1, 0.5 * cm))
 
-    evidence_rows = [["Image", "Path", "SHA-256", "Integrity", "Duplicates"]]
+    evidence_rows = [["Image", "SHA-256", "Integrity", "Duplicates"]]
     for row in case_results:
+        # Truncate hash to first 16 chars for readability
+        short_hash = (row["sha256_hash"] or "")[:16] + "..."
         evidence_rows.append(
             [
                 row["file_name"],
-                row["file_path"],
-                row["sha256_hash"],
+                short_hash,
                 row.get("integrity_status") or "Unknown",
                 str(row.get("duplicate_count", 0)),
             ]
@@ -85,7 +86,7 @@ def generate_forensic_report(case_info, case_results, timeline_data, output_dir)
 
     evidence_table = Table(
         evidence_rows,
-        colWidths=[2.8 * cm, 4.9 * cm, 5.2 * cm, 2.2 * cm, 1.7 * cm],
+        colWidths=[4.5 * cm, 5.5 * cm, 3.5 * cm, 3.3 * cm],
         repeatRows=1,
     )
     evidence_table.setStyle(
